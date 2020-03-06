@@ -1,8 +1,14 @@
 import React, { Component } from 'react'
 import Web3 from 'web3';
-import Property from "../abis/Property.json";
+import Market from "../abis/Market.json";
+import PropertyToken from "../abis/PropertyToken.json";
 import logo from '../logo.jpg';
-
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 
 export default class Home extends Component {
 
@@ -11,10 +17,12 @@ export default class Home extends Component {
       super(props)
       this.state = {
         account : '',
-        contract : null,
-        totalSupply : 0,
+        marketContract : null,
+        propertyContract : null,
         properties : [],
-        market : []
+        market : [],
+        propertyid:[],
+        balance : 0
       }
     }
     async componentWillMount()
@@ -48,18 +56,22 @@ export default class Home extends Component {
       })
       console.log(accounts);
       
-      const networkId = await web3.eth.net.getId();
-      const networkData = Property.networks[networkId] 
-      const abi = Property.abi
-      const address  = networkData.address
-      const contract = new web3.eth.Contract(abi,address)
+      const MarketNetworkId = await web3.eth.net.getId();
+      const MarketNetworkData = Market.networks[MarketNetworkId] 
+      const MarketAbi = Market.abi
+      const MarketAddress  = MarketNetworkData.address
+      const marketContract = new web3.eth.Contract(MarketAbi,MarketAddress)
       // console.log(contract);
       
-      this.setState({contract})
+      const propertyAbi = PropertyToken.abi
+      const propertyAddress = await marketContract.methods.returnPropertyToken().call();
+      const propertyContract = new web3.eth.Contract(propertyAbi,propertyAddress)
+      this.setState({marketContract})
+      this.setState({propertyContract})
       console.log("Connected");
       
-      const totalSupply = await contract.methods.totalSupply().call()
-      const supplyOwner = await contract.methods.tokensOfOwner(this.state.account).call();
+      const totalSupply = await propertyContract.methods.totalSupply().call()
+      const supplyOwner = await propertyContract.methods.tokensOfOwner(accounts[0]).call();
   
   
       // const blah = await contract.methods.tokensOfOwner(this.state.account).call()
@@ -67,6 +79,8 @@ export default class Home extends Component {
       this.setState({supplyOwner})
   
       console.log("totalSupply",this.state.totalSupply);
+      // console.log("Owner",await propertyContract.methods._tokenOwner(accounts[0]));
+
       console.log("supplyOwner",this.state.supplyOwner);
       
       if (supplyOwner!=null && totalSupply !=null)
@@ -79,62 +93,69 @@ export default class Home extends Component {
         for(var i = 0 ; i < len ; i++ ){
           var k = parseInt(this.state.supplyOwner[i]["_hex"],16)
           console.log("k",k);
+          var propertyName = await propertyContract.methods.properties(k).call()
           
-          const property = await contract.methods.physical_address(k-1).call()
+          // const property = await propertyContract.methods.properties(k).call()
           this.setState({
-            properties : [...this.state.properties,property]
+          propertyid : [...this.state.propertyid , k],
+
+            properties : [...this.state.properties,propertyName[0]]
           })
         }
       }
       var l = parseInt(this.state.totalSupply,16);
-      console.log(l);
+      const balance =web3.utils.fromWei(await web3.eth.getBalance(accounts[0]),'ether');
+      this.setState({balance})
       
-      for(var i = 1 ; i <= l ; i++ ){      
-        const property = await contract.methods.physical_address(i-1).call()
-        this.setState({
-          market : [...this.state.market,property]
-        })
-      }
-      this.setState({
-        market : this.state.market.filter(x => !this.state.properties.includes(x))
-      })
-      let difference = this.state.market.filter(x => !this.state.properties.includes(x));
-      console.log("market",difference);
-      
-      
-      // console.log(this.state.colors);
-  
-      // for(var i=1; i<= length(s))
+
       
     }
     render() {
         return (
-            <div>
-                <div className="container-fluid mt-5">
-          <div className="row">
-            <main role="main" className="col-lg-12 d-flex text-center">
-              <div className="content mr-auto ml-auto">
-              <h1>My Properties</h1>
-        </div>
-        </main>
-        </div>
-        </div>
-                <div className="row text-center">
-            { this.state.properties.map((property, key) => {
-              return(
-                <div key={key} className="col-md-3 mb-3" style={{padding:"20px"}}>
-                  <div>
-                    <img style={{width:"256px"}} src={logo}></img>
-                    <div>{property}</div>
-                    {/* <div>{key}</div> */}
-                  </div>
-                  
-                </div>
-              )
-            })}
+          <div>
+          <div className="container-fluid mt-5">
+   <div className="row">
+     <main role="main" className="col-lg-12 d-flex text-center">
+       <div className="content mr-auto ml-auto">
+       <h1 style={{marginTop:"40px"}}>My Properties </h1>
+ <h3 style={{marginTop:"40px"}}>My Balance  : {this.state.balance} Eth</h3>
 
-          </div>
-            </div>
+ </div>
+ </main>
+ </div>
+ </div>
+         <div className="row text-center">
+
+     { this.state.propertyid.map((id, key) => {
+        return(   
+         <div key={key} className="card" style={{width :"18em",margin:"20px"}}>   
+               <img className="card-img-top"  src={logo}></img>  
+             <div className="card-body">  
+
+               <h5 className="card-title">{this.state.properties[key]}</h5>  
+               {/* <h5 className="card-title">{this.getName(id)}</h5>   */}
+
+
+               <Link to={{
+                 pathname: '/property/abc',
+                 state: {
+                   propertyid: id,
+                   sell : 1,
+                   // propertyName:property
+                 }
+                 }}>
+              <button style={{width:"90%",marginBottom:"10px"}} className="btn btn-outline-success ">Sell</button>
+              </Link> 
+               <br/> 
+               <button style={{width:"90%",marginBottom:"10px"}} className="btn btn-outline-danger ">Rent</button> 
+               {/* <div>{key}</div>   */}
+             </div>  
+           
+           </div>  
+           ) 
+         })}  
+      </div> 
+     </div>
         )
     }
 }

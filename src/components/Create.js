@@ -1,12 +1,25 @@
 import React, { Component } from 'react'
 import Web3 from 'web3';
-import Property from "../abis/Property.json";
+import Market from "../abis/Market.json";
 export default class Create extends Component {
 
+  constructor(props)
+  {
+    super(props)
+    this.state = {
+      account : '',
+      marketContract : null,
+      tokenContract : null,
+      totalSupply : 0,
+      properties : [],
+      market : []
+    }
+  }
     async componentWillMount()
     {
       await this.loadWeb3()
       await this.loadBlockchainData()
+  
     }
     async loadWeb3()
     {
@@ -22,6 +35,8 @@ export default class Create extends Component {
       else{
         window.alert("Non-Ethereum Browser detected")
       }
+      // console.log(this.state);
+      
     }
   
     async loadBlockchainData()
@@ -30,91 +45,60 @@ export default class Create extends Component {
       const accounts = await web3.eth.getAccounts()
       this.setState({
         account : accounts[0]
-      })
-      console.log(accounts);
-      
-      const networkId = await web3.eth.net.getId();
-      const networkData = Property.networks[networkId] 
-      const abi = Property.abi
-      const address  = networkData.address
-      const contract = new web3.eth.Contract(abi,address)
-      // console.log(contract);
-      
-      this.setState({contract})
-    //   console.log("Connected");
-      
-    //   const totalSupply = await contract.methods.totalSupply().call()
-    //   const supplyOwner = await contract.methods.tokensOfOwner(this.state.account).call();
-  
-  
-    //   // const blah = await contract.methods.tokensOfOwner(this.state.account).call()
-    //   this.setState({totalSupply})
-    //   this.setState({supplyOwner})
-  
-    //   console.log("totalSupply",this.state.totalSupply);
-    //   console.log("supplyOwner",this.state.supplyOwner);
-      
-    //   if (supplyOwner!=null && totalSupply !=null)
-    //   {
-    //     var len = this.state.supplyOwner.length;
-    //     console.log("length" , len);
-    //     // console.log("length" , await contract.methods.physical_address(parseInt(this.state.supplyOwner[0]["_hex"],16)).call());
+      }, function ()
+      {
+        console.log(this.state.account);
         
-    
-    //     for(var i = 0 ; i < len ; i++ ){
-    //       var k = parseInt(this.state.supplyOwner[i]["_hex"],16)
-    //       console.log("k",k);
-          
-    //       const property = await contract.methods.physical_address(k-1).call()
-    //       this.setState({
-    //         properties : [...this.state.properties,property]
-    //       })
-    //     }
-    //   }
-    //   var l = parseInt(this.state.totalSupply,16);
-    //   console.log(l);
+      })
+      console.log(accounts[0]);
       
-    //   for(var i = 1 ; i <= l ; i++ ){      
-    //     const property = await contract.methods.physical_address(i-1).call()
-    //     this.setState({
-    //       market : [...this.state.market,property]
-    //     })
-    //   }
-    //   this.setState({
-    //     market : this.state.market.filter(x => !this.state.properties.includes(x))
-    //   })
-    //   let difference = this.state.market.filter(x => !this.state.properties.includes(x));
-    //   console.log("market",difference);
+      const MarketNetworkId = await web3.eth.net.getId();
+      const MarketNetworkData = Market.networks[MarketNetworkId] 
+      const MarketAbi = Market.abi
+      const MarketAddress  = MarketNetworkData.address
+      const marketContract = new web3.eth.Contract(MarketAbi,MarketAddress)
+      console.log("a",marketContract);
+      
+      const a=await marketContract.methods.returnPropertyToken().call();
+      console.log("add",a);
+      console.log("mardket Add",MarketAddress);
       
       
-      // console.log(this.state.colors);
-  
-      // for(var i=1; i<= length(s))
+      this.setState({marketContract})
+      console.log(this.state.account);
+      // console.log(contract.methods.totalSupply().call());
+
+      console.log("tryAdd", await marketContract.methods.tryAdd().call());
+
+      
       
     }
 
-    constructor(props)
-  {
-    super(props)
-    this.state = {
-      account : '',
-      contract : null,
-      totalSupply : 0,
-      properties : [],
-      market : []
-    }
-  }
+   
 
-  mint = (property) => {
-    console.log(property);
+  // mint = (property) => {
+  //   console.log(property);
     
-    this.state.contract.methods.mint(property).send({from: this.state.account})
+  //   this.state.contract.methods.mint(property).send({from: this.state.account})
+  //   .once('reciept',(reciept)=>{
+  //     this.setState({
+  //       properties:[...this.state.properties,property]
+  //     })
+  //   })
+ 
+  // }
+  mint = ( _property_name, _property_address,_city, _state, _postal_code, _price) => {
+    console.log("contract",this.state.marketContract);
+    
+    
+    this.state.marketContract.methods.mintPropety( _property_name, _property_address,_city, _state, _postal_code, _price)
+    .send({from: this.state.account})
     .once('reciept',(reciept)=>{
       this.setState({
-        properties:[...this.state.properties,property]
+        properties:[...this.state.properties,_property_name]
       })
     })
- 
+    
   }
 
     render() {
@@ -136,14 +120,47 @@ export default class Create extends Component {
               {/* <h1>Issue Token</h1> */}
                 <form onSubmit={(event) => {
                   event.preventDefault()
-                  const property = this.property.value
-                  this.mint(property)
-                }}>
+                  // const property = this.property.value
+                  const _property_name = this.property_name.value
+                  const _property_address = this.property_address.value
+                  const _city = this.city.value
+                  const _state = this._state.value
+                  const _price = this.price.value
+                  const _postal_code = this.postal_code.value
+                  this.mint(_property_name,_property_address,_city,_state,_postal_code,_price)
+                }}
+                >
                   <input
                     type='text'
                     className='form-control mb-1'
-                    placeholder='Physical Address'
-                    ref={(input) => { this.property = input }}
+                    placeholder='Property Name'
+                    ref={(input) => { this.property_name = input }}
+                  />
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='Property Address'
+                    ref={(input) => { this.property_address = input }} />
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='City'
+                    ref={(input) => { this.city = input }}/>
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='State'
+                    ref={(input) => { this._state = input }}/>
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='Postal Code'
+                    ref={(input) => { this.postal_code = input }}/>
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='Price'
+                    ref={(input) => { this.price = input }}
                   />
                   <input
                     type='submit'
