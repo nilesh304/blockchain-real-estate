@@ -5,8 +5,6 @@ import "./ERC721Full.sol";
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 
-
-
 contract PropertyToken is ERC721Full,Ownable {
 
 struct Property {
@@ -26,6 +24,8 @@ struct Property {
     Property[] public properties;
     mapping(uint => uint) public propertyPrices;
     uint[] public propertiesForSale;
+    uint[] public propertiesApproved;
+
     mapping(uint => uint) public indexes; //propertyId -> propertiesForSale
 
     constructor() ERC721Full("Property","PROPERTY") public    {
@@ -64,18 +64,35 @@ struct Property {
     function propertiesForSaleN() public view returns(uint) {
         return propertiesForSale.length;
     }
+    function pushForSale(uint _propertyId) public returns(uint) {
+        bool avail = false;
+        for (uint i = 0; i < propertiesForSale.length; i++) {
+            if (propertiesForSale[i] == _propertyId)
+                avail = true;
+        }
+        require(!avail,
+        "ALready On Market");
+        propertiesForSale.push(_propertyId);
+        indexes[_propertyId] = propertiesForSale.length - 1;
+        // return propertiesApproved.length;
+    }
+    // function approveAndSale(address to,uint tokenId) public{
+    //     approve(to, tokenId);
+    //     pushForSale(tokenId);
+
+    // }
 
     /// @notice Buy property
     /// @param _propertyId TokenId
 
     function buyProperty(uint _propertyId,address newOwner) public {
         // You can only buy the spaceships owned by this contract
-        require(ownerOf(_propertyId) == msg.sender,
+        require(ownerOf(_propertyId) == msg.sender || getApproved(_propertyId) == msg.sender,
         "Sender not authorized");
         // Value sent should be at least the spaceship price
         // require(msg.value >= propertyPrices[_propertyId],
         // "Value less than selling price");
-        approve(newOwner, _propertyId);
+        // approve(newOwner, _propertyId);
         // We approve the transfer directly to avoid creating two trx
         // then we send the token to the sender
         // tokenApprovals[_propertyId] = msg.sender;
@@ -90,6 +107,48 @@ struct Property {
         propertiesForSale[pos] = replacer;
         indexes[replacer] = pos;
         propertiesForSale.length--;
+        // uint refund = msg.value - propertyPrices[_propertyId];
+        // if (refund > 0)
+        //     msg.sender.transfer(refund);
+    }
+        function buyProperty2(address oldOwner,uint _propertyId,address newOwner) public {
+        // You can only buy the spaceships owned by this contract
+        require(ownerOf(_propertyId) == msg.sender || getApproved(_propertyId) == msg.sender,
+        "Sender not authorized");
+        
+        // Value sent should be at least the spaceship price
+        // require(msg.value >= propertyPrices[_propertyId],
+        // "Value less than selling price");
+        // approve(newOwner, _propertyId);
+        // We approve the transfer directly to avoid creating two trx
+        // then we send the token to the sender
+        // tokenApprovals[_propertyId] = msg.sender;
+        transferFrom(oldOwner, newOwner, _propertyId);
+        ownerTokens[newOwner].push(_propertyId);
+        uint[] storage oldOwnerArray = ownerTokens[oldOwner];
+        uint ind;
+        uint len = oldOwnerArray.length;
+        for( uint i = 0; i < len; i++)
+        {
+            if (oldOwnerArray[i] == _propertyId)
+                ind = i;
+        }
+
+        // ownerTokens[oldOwner][]
+        oldOwnerArray[ind] = oldOwnerArray[len-1];
+        delete oldOwnerArray[len-1];
+        oldOwnerArray.length --;
+        // address payable rec = 0x84753F397F925ABA6d00222C51e8F6c6b81359E5;
+        // rec.transfer(msg.value);
+        // Delete the token from the list of tokens for sale
+        uint256 replacer = propertiesForSale[propertiesForSale.length - 1];
+        uint256 pos = indexes[_propertyId];
+        propertiesForSale[pos] = replacer;
+        indexes[replacer] = pos;
+        propertiesForSale.length--;
+
+
+        
         // uint refund = msg.value - propertyPrices[_propertyId];
         // if (refund > 0)
         //     msg.sender.transfer(refund);
@@ -230,12 +289,23 @@ contract Market is Ownable {
     // {
     //     marketProperties = pt.properties(id);
     // }
-    function transferProperty(uint _propertyId) public payable
+    function transferProperty(uint _propertyId,address app) public payable
     {
-        // address payable prevOwner = address(uint160(address(pt.ownerOf(_propertyId))));
+        address ownerToken = pt.ownerOf(_propertyId);
+        if(ownerToken == address(this))
+        {
+            pt.buyProperty(_propertyId,msg.sender);
+        }
+        else {
+            address payable prevOwner = address(uint160(ownerToken));
+            pt.buyProperty2(ownerToken,_propertyId,msg.sender);
+            prevOwner.transfer(msg.value);
+
+        }
         // pt.setApproval()
-        pt.buyProperty(_propertyId,msg.sender);
+            // prevOwner.transfer(msg.value);
+        
         // tokensOfOwner[msg.sender].push(_propertyId);
-        // address(this).transfer(msg.value);
+        
     }
 }

@@ -73,10 +73,12 @@ export default class MarketPlace extends Component {
       const propertyContract = new web3.eth.Contract(propertyAbi,propertyAddress)
       this.setState({marketContract})
       this.setState({propertyContract})
-      console.log("Connected");
+      console.log("propertyContract",propertyContract.address);
       
       var totalSupply = await propertyContract.methods.propertiesForSaleN().call();
       totalSupply = parseInt(totalSupply,16)
+      console.log(totalSupply);
+      
       // var propertiesForSale = parseInt(await contract.methods.propertiesForSale(0).call(),16);
       // var property = await contract.methods.properties(propertiesForSale).call()
       // console.log(property);
@@ -88,10 +90,8 @@ export default class MarketPlace extends Component {
       // const blah = await contract.methods.tokensOfOwner(this.state.account).call()
       this.setState({totalSupply})
       console.log("totalSupply",totalSupply);
-      console.log("owner", await propertyContract.methods.ownerOf(0).call() );
+      console.log("owner", await propertyContract.methods.ownerOf(0).call());
       console.log("address", propertyAddress,MarketAddress );
-
-      
       // console.log("j",await contract.methods.properties(0).call());
       
 
@@ -108,6 +108,8 @@ export default class MarketPlace extends Component {
           properties : [...this.state.properties, propertyName[0]]
         })
       }
+      console.log("length",totalSupply);
+      
       // console.log(this.state.propertyid);
       
 

@@ -27,6 +27,9 @@ export default class PropertyDetail extends Component {
 
       }
       this.buy = this.buy.bind(this);
+      this.sell = this.sell.bind(this);
+      this.push = this.push.bind(this);
+
        
    }
    async componentWillMount()
@@ -65,7 +68,7 @@ export default class PropertyDetail extends Component {
       const MarketAbi = Market.abi
       const MarketAddress  = MarketNetworkData.address
       const marketContract = new web3.eth.Contract(MarketAbi,MarketAddress)
-      // console.log(contract);
+      // console.log("market address",marketContract.address);
       
 
       const propertyAbi = PropertyToken.abi
@@ -90,19 +93,24 @@ export default class PropertyDetail extends Component {
           propertyPrice : parseInt(price._hex,16)
         })
         console.log(await propertyContract.methods.ownerOf(this.state.propertyId).call());
+        console.log("propertyContract",propertyContract.address);
+        console.log("approvedContract",await propertyContract.methods.getApproved(this.state.propertyId).call());
+
         // console.log("tryAdd", await contract.methods.tryAdd().call());
         
         
     }
     async buy()
     {
+      console.log("id",this.state.propertyId);
+
       // this.state.web3.eth.sendTransaction({
       //   to: '0x84753F397F925ABA6d00222C51e8F6c6b81359E5',
       //   from: '0x74BFBB44Ece31DA8A28791Bb7ee1783Deb3f231A',
       //   value: this.state.web3.utils.toWei('1', 'ether'),
       // }, console.log)
       console.log(this.state.propertyPrice.toString() );
-      await this.state.marketContract.methods.transferProperty(this.state.propertyId).send({
+      await this.state.marketContract.methods.transferProperty(this.state.propertyId,'0x600be05cA961366069c4CB3c123F5636Bce5e7e7').send({
         from:this.state.account,
         value:this.state.web3.utils.toWei(this.state.propertyPrice.toString(),'ether')
       })
@@ -131,6 +139,33 @@ export default class PropertyDetail extends Component {
       //   value : this.state.web3.utils.toWei(this.state.propertyPrice.toString(),'ether')
       // })
     }
+
+    async sell()
+    {
+      console.log("id",this.state.propertyId);
+      
+      var k = await this.state.propertyContract.methods.approve(this.state.marketContract.address,this.state.propertyId).send({
+        from : this.state.account,
+        value:0
+      });
+      // console.log('approve',k);
+      // var m=await this.state.propertyContract.methods.getApproved(this.state.propertyId).call()
+      // var p = await this.state.propertyContract.methods.pushForSale(this.state.propertyId).call()
+      // console.log("p",p);
+      // console.log("m",m);
+      // await this.push()
+    }
+    async push()
+    {
+      console.log("p",await this.state.propertyContract.methods.propertiesForSaleN().call());
+      var p = await this.state.propertyContract.methods.pushForSale(this.state.propertyId).send({
+        from:this.state.account,
+        value:0
+      })
+      
+    }
+
+
     render() {
         return (
             <div  style={{width: "50%",margin:"auto",border:"1px black solid ", borderRadius:"5px",padding:"20px",margin:"100px auto"}}>
@@ -169,13 +204,18 @@ export default class PropertyDetail extends Component {
                 </table>
                 <br/>
                 {this.state.sell ? 
-                (<button onClick={this.buy} style={{width:"49%",marginBottom:"10px",marginRight:"2%"}} className="btn btn-outline-success ">Sell</button>) 
+                (
+                  <div>
+                <button onClick={this.sell} style={{width:"49%",marginBottom:"10px",marginRight:"2%"}} className="btn btn-outline-success ">Sell</button>
+                <button onClick={this.push} style={{width:"49%",marginBottom:"10px"}} className="btn btn-outline-danger ">Confirm</button>
+                </div>
+                ) 
                 :
                 (<button onClick={this.buy} style={{width:"49%",marginBottom:"10px",marginRight:"2%"}} className="btn btn-outline-success ">Buy</button>)
                 }
                 
                 
-                <button style={{width:"49%",marginBottom:"10px"}} className="btn btn-outline-danger ">Rent</button>
+                {/* <button style={{width:"49%",marginBottom:"10px"}} className="btn btn-outline-danger ">Rent</button> */}
 
                 
                 {/* {this.state.propertyDetails.property_name} */}

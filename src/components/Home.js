@@ -107,8 +107,6 @@ export default class Home extends Component {
       const balance =web3.utils.fromWei(await web3.eth.getBalance(accounts[0]),'ether');
       this.setState({balance})
       
-
-      
     }
     render() {
         return (
