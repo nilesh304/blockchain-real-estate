@@ -64,6 +64,7 @@ struct Property {
     function propertiesForSaleN() public view returns(uint) {
         return propertiesForSale.length;
     }
+    //Adds the property to propertiesForSale
     function pushForSale(uint _propertyId) public returns(uint) {
         bool avail = false;
         for (uint i = 0; i < propertiesForSale.length; i++) {
@@ -85,6 +86,7 @@ struct Property {
     /// @notice Buy property
     /// @param _propertyId TokenId
 
+    //function to transfer from Market contract to User
     function buyProperty(uint _propertyId,address newOwner) public {
         // You can only buy the spaceships owned by this contract
         require(ownerOf(_propertyId) == msg.sender || getApproved(_propertyId) == msg.sender,
@@ -111,6 +113,7 @@ struct Property {
         // if (refund > 0)
         //     msg.sender.transfer(refund);
     }
+    //function to transfer from one user to another
         function buyProperty2(address oldOwner,uint _propertyId,address newOwner) public {
         // You can only buy the spaceships owned by this contract
         require(ownerOf(_propertyId) == msg.sender || getApproved(_propertyId) == msg.sender,
@@ -237,6 +240,7 @@ struct Property {
     //     return tokenCount;
 
     // }
+    //to get tokens of particular owner
     function tokensOfOwner(address add) public returns(uint[] memory)
     {
      return ownerTokens[add];
@@ -245,28 +249,33 @@ struct Property {
 }
 contract Market is Ownable {
 
+
+    // an object of Property Smart contract
     PropertyToken pt = new PropertyToken();
 
+    //to get address of PropertyToken
     function returnPropertyToken() public returns (address)
     {
         return address(pt);
     }
 
-    struct Property {
-         // IPFS Hash
-        string property_name;
-        string property_address;
-        string city;
-        string state;
-        uint postal_code;
-    }
-    Property[] public marketProperties;
+    // struct Property {
+    //      // IPFS Hash
+    //     string property_name;
+    //     string property_address;
+    //     string city;
+    //     string state;
+    //     uint postal_code;
+    // }
+    // Property[] public marketProperties;
 
+    //Test function
     function tryAdd() public returns (address)
     {
         return msg.sender;
     }
 
+    // Function to create a new property throught PropertToken
     function mintPropety( string memory _property_name,
                   string memory _property_address, string memory _city,
                   string memory _state,uint  _postal_code, uint _price) public onlyOwner {
@@ -289,6 +298,8 @@ contract Market is Ownable {
     // {
     //     marketProperties = pt.properties(id);
     // }
+
+    //Function to transfer Property, call transfer function of PropertyToken
     function transferProperty(uint _propertyId,address app) public payable
     {
         address ownerToken = pt.ownerOf(_propertyId);
@@ -304,8 +315,6 @@ contract Market is Ownable {
         }
         // pt.setApproval()
             // prevOwner.transfer(msg.value);
-        
         // tokensOfOwner[msg.sender].push(_propertyId);
-        
     }
 }
