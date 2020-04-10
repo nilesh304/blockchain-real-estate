@@ -69,7 +69,7 @@ export default class Create extends Component {
       // console.log(contract.methods.totalSupply().call());
 
       console.log("tryAdd", await marketContract.methods.tryAdd().call());
-
+      // web3.eth.sign(web3.utils.hexToString("0x68656c6c6f20776f726c64") , accounts[0], console.log);
       
       
     }

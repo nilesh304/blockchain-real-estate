@@ -14,6 +14,7 @@ import MarketPlace from './MarketPlace';
 import Create from './Create';
 import PropertyDetail from './PropertyDetail';
 import Home from './Home';
+import Login from './Login';
 // import Home from './Home';
 
 class App extends Component {
@@ -126,6 +127,9 @@ class App extends Component {
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>
+          <Route path ="/login">
+            <Login />
+          </Route>
           <Route path="/create">
             <Create />
           </Route>

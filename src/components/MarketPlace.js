@@ -208,7 +208,7 @@ export default class MarketPlace extends Component {
                      <button style={{width:"90%",marginBottom:"10px"}} className="btn btn-outline-success ">Buy</button>
                      </Link> 
                       <br/> 
-                      <button style={{width:"90%",marginBottom:"10px"}} className="btn btn-outline-danger ">Rent</button> 
+                      {/* <button style={{width:"90%",marginBottom:"10px"}} className="btn btn-outline-danger ">Rent</button>  */}
                       {/* <div>{key}</div>   */}
                     </div>  
                   

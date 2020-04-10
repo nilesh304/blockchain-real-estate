@@ -8,7 +8,6 @@ import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 contract PropertyToken is ERC721Full,Ownable {
 
 struct Property {
-         // IPFS Hash
         string property_name;
         string property_address;
         string city;
@@ -16,10 +15,6 @@ struct Property {
         uint postal_code;
     }
     mapping (address => uint[]) public ownerTokens;
-    // string[] public physical_address;
-    // mapping(string => bool) _propertyExists;
-    // mapping(uint => address) _propertyIndexToOwner;
-    // mapping(string => uint) _propertyToIndex;
     mapping (uint256 => address) internal tokenApprovals;
     Property[] public properties;
     mapping(uint => uint) public propertyPrices;
@@ -31,14 +26,6 @@ struct Property {
     constructor() ERC721Full("Property","PROPERTY") public    {
     }
 
-    // function mint(string memory _physical_address) public {
-    //     require(!_propertyExists[_physical_address]);
-    //     uint _id = physical_address.push(_physical_address);
-    //     _mint(msg.sender, _id);
-    //     _propertyExists[_physical_address] = true;
-    //     _propertyIndexToOwner[_id] = msg.sender;
-    //     _propertyToIndex[_physical_address] = _id;
-    // }
 
     function mint( string memory _property_name,
                   string memory _property_address, string memory _city,
@@ -311,7 +298,6 @@ contract Market is Ownable {
             address payable prevOwner = address(uint160(ownerToken));
             pt.buyProperty2(ownerToken,_propertyId,msg.sender);
             prevOwner.transfer(msg.value);
-
         }
         // pt.setApproval()
             // prevOwner.transfer(msg.value);
